@@ -26,7 +26,7 @@ void execCmdRedirect(char** userInpParsed, char** userInpParsedRedirect); // COM
 int userInpTake(char* userInput)
 {
   char *inpBuffer;
-  size_t inpBufferSize = 1024;
+  //size_t inpBufferSize = 1024;
   
   char *uname = getenv("USER"); // Gets the current user's name from the environmental variables under the entry "USER".
   char currDir[1024]; // An array to store the bytes of every character in the directory path.
@@ -35,22 +35,42 @@ int userInpTake(char* userInput)
   getcwd(currDir, sizeof(currDir)); // Copies an absolute pathname of the current directory we are in into the buffer "currDir" by allocating the proper length size to the buffer. Essentially, how much space will be used within the buffer in terms of length size.
 
   printf("%s: %s\n", uname, currDir); // Username: Current Directory display.
+
+  // TEST 
+  /*if(inpBuffer)
+  {
+    free(inpBuffer);
+    inpBuffer = (char *)NULL;
+  }*/
+  // TEST 
   
   // Input method 1:
   inpBuffer = readline("> "); // Reads a line from the terminal and returns it into the input buffer pointer. Any input read here is stored somewhere in memory that input buffer points to.
+
+  printf("\n===============================\ninpBuffer is: %s\n===============================\n", inpBuffer); // TEST
+
+  int inpLen = strlen(inpBuffer);
+  printf("Input Length of command: %d\n", inpLen); // TEST
   
   // Next check if the input from the user is there or not.
-  if(strlen(inpBuffer) != 0)
+  if(inpLen != 0)
   {
     add_history(inpBuffer); // Built-in function to the readline/history.h library. This helps add the commands in a separate space in memory to be easily accessible by keys later.
 
     strcpy(userInput, inpBuffer); // Takes whatever is in inpBuffer pointer and copies it over to the userInput memory space. This points back to the array in main which is then populated by this pointer sending the characters to their respective memory location. The copy continues until the null terminator is hit from the source buffer.
     userInpFlag = 0;
+
+    printf("\n====== Input Buffer before clearing: %s ========\n", inpBuffer);
+    free(inpBuffer); // TEST
+    printf("\n====== Input Buffer after clearing: %s ========\n", inpBuffer);
   }
   else
   {
+    userInput = "";
     userInpFlag = 1;
   }
+
+  printf("\n===============================\nuserInput is: %s\n===============================\n\n", userInput);
 
   return userInpFlag; // Send the flag value back to main to decide what happens next.
 }
@@ -147,6 +167,32 @@ int cmdRedirectParse(char* userInput, char** userInpEdit)
 
   //printf("Redirect first check: %d\n", redirectFlag); // TEST
   
+  /*if(redirectFlag == 0)
+  {
+    for(i = 0; i < 2; i++)
+    {
+      // Loops a total 2 times, the number of elements for userInpEdit, and checks for the pipe symbol...
+
+      userInpEdit[i] = strsep(&userInput, ">"); // The strsep function goes through the dereferenced memory address of userInput, and cycles through every character until it either hits the null terminator, or the specified delimeter/symbol. It will store the beginning pointer address in the first element, then it will continue to read from the second beginning pointer address, until the null terminator is hit.
+    
+      if(userInpEdit[i] == NULL)
+      {
+	break; // Says that no point in going on with the loop if the current element of the pointer array is empty, that means that there are no more commands to look for. Exit the loop.
+      }
+    }
+
+    if(userInpEdit[1] == NULL)
+    {
+      redirectFlag = 0; // There was no second command read, meaning that there was no redirect.
+    }
+    else
+    {
+      redirectFlag = 1; // A second command is indeed present.
+    }
+
+    printf("Redirect second check: %d\n", redirectFlag); // TEST
+  }*/
+
   return redirectFlag;
 }
 
@@ -253,7 +299,7 @@ void execCmd(char** userInpParsed)
   // If fork ever returns a value below 0, it means that there was a problem. Conducting a check for that below:
   if(childProcess < 0)
   {
-    printf("Error in executing command - Child process could not be successfuly created. Please try again later...\n");
+    printf("\nError in executing command - Child process could not be successfuly created. Please try again later...\n");
     return; // Goes back to main to begin the process anew. Ideal health of the child process for return value should be 0. Then execute the rest.
   }
   else if(childProcess == 0)
@@ -261,7 +307,7 @@ void execCmd(char** userInpParsed)
     // Sending the user parsed input(s) to the OS so that it can convey the command to the kernel and display results.
     if(execvp(userInpParsed[0], userInpParsed) < 0)
     {
-      printf("Error in executing command - Command was not successfully sent to the OS. Please try again later...\n"); // In case something went wrong.
+      printf("\nError in executing command - Command was not successfully sent to the OS. Please try again later...\n"); // In case something went wrong.
     }
     
     exit(0); // Exits the child process and goes back to the parent process.
@@ -289,7 +335,7 @@ void execCmdPiped(char** userInpParsed, char** userInpParsedPiped)
   // Initiate the pipe and check if pipe was successful.
   if(pipe(fd) < 0)
   {
-    printf("Pipe could not be initiated successfully. Please try again later.\n");
+    printf("\nPipe could not be initiated successfully. Please try again later.\n");
     return; // No point in continuing in this function as the pipe was not successfully established, therefore the command won't successfully work. Go back to main.
   }
   
@@ -298,7 +344,7 @@ void execCmdPiped(char** userInpParsed, char** userInpParsedPiped)
   // Similar to the previous function - when executing only one command.
   if(child1 < 0)
   {
-    printf("Error in executing command - Child process could not be successfuly created. Please try again later...\n");
+    printf("\nError in executing command - Child process could not be successfuly created. Please try again later...\n");
     return; // Goes back to main to begin the process anew. Ideal health of the child process for return value should be 0. Then execute the rest.
   }
 
@@ -312,7 +358,7 @@ void execCmdPiped(char** userInpParsed, char** userInpParsedPiped)
     // Executing the command before the pipe. Results should feed into the pipe and kept stored inside of it.
     if(execvp(userInpParsed[0], userInpParsed) < 0)
     {
-      printf("Error in executing command - Command was not successfully sent to the OS. Please try again later...\n"); // In case something went wrong.
+      printf("\nError in executing command - Command was not successfully sent to the OS. Please try again later...\n"); // In case something went wrong.
       exit(0); // Exit child process.
     }
   }
@@ -322,7 +368,7 @@ void execCmdPiped(char** userInpParsed, char** userInpParsedPiped)
 
     if(child2 < 0)
     {
-      printf("Error in executing command - Child process could not be successfuly created. Please try again later...\n");
+      printf("\nError in executing command - Child process could not be successfuly created. Please try again later...\n");
       return; // Goes back to main to begin the process anew. Ideal health of the child process for return value should be 0. Then execute the rest.
     }
 
@@ -335,7 +381,7 @@ void execCmdPiped(char** userInpParsed, char** userInpParsedPiped)
       
       if(execvp(userInpParsedPiped[0], userInpParsedPiped) < 0)
       {
-	printf("Error in executing command - Command was not successfully sent to the OS. Please try again later...\n"); // In case something went wrong.
+	printf("\nError in executing command - Command was not successfully sent to the OS. Please try again later...\n"); // In case something went wrong.
 	exit(0); // Exit child process.
       }
       
@@ -346,7 +392,6 @@ void execCmdPiped(char** userInpParsed, char** userInpParsedPiped)
       wait(NULL); // Waits for the child process to die if none of the conditions above are met.
     }
   }
-  //exit(0); // TEST
 }
 
 /*--------------------------------------------------------------------------*/
@@ -365,7 +410,7 @@ void execCmdRedirect(char** userInpParsed, char** userInpParsedRedirect)
   // Initiate the pipe and check if pipe was successful.
   if(pipe(fd) < 0)
   {
-    printf("Pipe could not be initiated successfully. Please try again later.\n");
+    printf("\nPipe could not be initiated successfully. Please try again later.\n");
     return; // No point in continuing in this function as the pipe was not successfully established, therefore the command won't successfully work. Go back to main.
   }
   
@@ -374,7 +419,7 @@ void execCmdRedirect(char** userInpParsed, char** userInpParsedRedirect)
   // Similar to the previous function - when executing only one command.
   if(child1 < 0)
   {
-    printf("Error in executing command - Child process could not be successfuly created. Please try again later...\n");
+    printf("\nError in executing command - Child process could not be successfuly created. Please try again later...\n");
     return; // Goes back to main to begin the process anew. Ideal health of the child process for return value should be 0. Then execute the rest.
   }
 
@@ -388,7 +433,7 @@ void execCmdRedirect(char** userInpParsed, char** userInpParsedRedirect)
     // Executing the command before the pipe. Results should feed into the pipe and kept stored inside of it.
     if(execvp(userInpParsed[0], userInpParsed) < 0)
     {
-      printf("Error in executing command - Command was not successfully sent to the OS. Please try again later...\n"); // In case something went wrong.
+      printf("\nError in executing command - Command was not successfully sent to the OS. Please try again later...\n"); // In case something went wrong.
       exit(0); // Exit child process.
     }
     
@@ -400,7 +445,7 @@ void execCmdRedirect(char** userInpParsed, char** userInpParsedRedirect)
 
     if(child2 < 0)
     {
-      printf("Error in executing command - Child process could not be successfuly created. Please try again later...\n");
+      printf("\nError in executing command - Child process could not be successfuly created. Please try again later...\n");
       return; // Goes back to main to begin the process anew. Ideal health of the child process for return value should be 0. Then execute the rest.
     }
 
@@ -418,7 +463,6 @@ void execCmdRedirect(char** userInpParsed, char** userInpParsedRedirect)
 
       close(fd[0]);
       fflush(stdout);
-      fflush(stdin);
       
       /*
       // For the second child process, we want to read. This allows the results from the first child process to be read in and processed according to the second command/program.
